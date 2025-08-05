@@ -39,7 +39,7 @@ services:
       echo '🛠️  Migrating DB…' &&
       python manage.py migrate --noinput &&
       echo '🚀 Starting server…' &&
-      gunicorn credit_system.wsgi:application --bind 0.0.0.0:8000
+      python manage.py runserver 0.0.0.0:8000
       "
       
 volumes:

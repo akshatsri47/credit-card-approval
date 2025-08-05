@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from pathlib import Path
 from loans.models import Customer, Loan
+from django.db import connection
 
 class Command(BaseCommand):
     help = "Import customers and loans from Excel"
@@ -55,3 +56,12 @@ class Command(BaseCommand):
             ))
         Loan.objects.bulk_create(loans)
         self.stdout.write(self.style.SUCCESS(f"Imported {len(loans)} loans"))
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT setval(
+                    pg_get_serial_sequence('loans_customer','customer_id'),
+                    (SELECT MAX(customer_id) FROM loans_customer)
+                );
+            """)
+        self.stdout.write(self.style.SUCCESS("Reset customer_id sequence"))
