@@ -161,6 +161,7 @@ class EligibilitySerializer(serializers.Serializer):
 
         return {
             "customer_id":           cust.customer_id,
+             "loan_amount":           P,
             "approved":              approved,
             "interest_rate":         req_rate,
             "corrected_rate":        corrected.quantize(Decimal("0.01")),
