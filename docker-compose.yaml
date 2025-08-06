@@ -21,6 +21,13 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    container_name: credit_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
   web:
     build: .
     container_name: credit_backend
@@ -32,15 +39,30 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - redis
     command: >
       sh -c "
-      echo '⏳ Waiting for Postgres…' &&
-      until pg_isready -h db -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"; do sleep 1; done &&
-      echo '🛠️  Migrating DB…' &&
-      python manage.py migrate --noinput &&
-      echo '🚀 Starting server…' &&
-      python manage.py runserver 0.0.0.0:8000
+        echo '⏳ Waiting for Postgres…' &&
+        until pg_isready -h db -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"; do sleep 1; done &&
+        echo '🛠️  Migrating DB…' &&
+        python manage.py migrate --noinput &&
+        echo '🚀 Enqueuing import task…' &&
+        python manage.py import_data &&
+        echo '🚀 Starting server…' &&
+        python manage.py runserver 0.0.0.0:8000
       "
-      
+
+  celery:
+    build: .
+    container_name: credit_celery
+    command: celery -A credit_approval worker --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+
 volumes:
   postgres_data:
