@@ -2,7 +2,7 @@
 import os
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'credit_approval.settings')
 
 app = Celery('credit_approval')
 # Pull configs from Django settings, using CELERY_ prefix
